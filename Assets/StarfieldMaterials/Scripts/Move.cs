@@ -3,7 +3,9 @@ using System.Collections;
 
 public class Move : MonoBehaviour
 {
-    float Target;
+    
+	/*
+	float Target;
 	void Start()
 	{
         print("Thanks for buying this, if you need any support, email support@dilapidatedmeow.com. " +
@@ -17,4 +19,5 @@ public class Move : MonoBehaviour
         transform.position = Vector3.MoveTowards(transform.position, new Vector3(transform.position.x, transform.position.y, Target), 0.05f);
 
 	}
+	*/
 }
