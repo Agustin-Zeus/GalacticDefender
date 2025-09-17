@@ -1,56 +1,74 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PoolBulletPlayer : MonoBehaviour
 {
-    public GameObject bulletPrefab; // Prefab de la bala
-    public int poolSize = 20;       // Tamaño inicial del pool
-    private List<GameObject> bulletPool;
+    [SerializeField] private GameObject bulletPrefab;
+    [SerializeField] private int poolSize = 10;
+    [SerializeField] private Transform poolParent;
 
-    void Start()
+    private readonly Queue<GameObject> availableBullets = new Queue<GameObject>();
+    private readonly List<GameObject> allBullets = new List<GameObject>();
+
+    private void Awake()
     {
-        // Inicializa la lista del pool
-        bulletPool = new List<GameObject>();
+        if (bulletPrefab == null)
+        {
+            Debug.LogError("[PoolBulletPlayer] No se ha asignado un prefab de bala.", this);
+            return;
+        }
 
-        // Crea las balas inactivas y las agrega al pool
         for (int i = 0; i < poolSize; i++)
         {
-            GameObject bullet = Instantiate(bulletPrefab);
-            bullet.SetActive(false);  // Desactiva la bala inmediatamente
-            bulletPool.Add(bullet);   // Agrega la bala a la lista
+            CreateBullet();
         }
     }
 
-    // Función para obtener una bala del pool
-    public GameObject GetBullet(float lifespan)
+    private GameObject CreateBullet()
     {
-        foreach (GameObject bullet in bulletPool)
-        {
-            if (!bullet.activeInHierarchy)
-            {
-                // Activa la bala cuando sea reutilizada
-                bullet.SetActive(true);
-                return bullet;
-            }
-        }
-
-        // Si todas las balas están en uso, puedes optar por agregar una nueva bala al pool
-        GameObject newBullet = Instantiate(bulletPrefab);
-        newBullet.SetActive(true);
-        bulletPool.Add(newBullet); // Agrega la nueva bala al pool
-        return newBullet;
+        GameObject bullet = Instantiate(bulletPrefab, poolParent);
+        bullet.SetActive(false);
+        availableBullets.Enqueue(bullet);
+        allBullets.Add(bullet);
+        return bullet;
     }
 
-    // Función para devolver la bala al pool
+    public GameObject GetBullet(float lifespan = 0f)
+    {
+        GameObject bullet;
+        if (availableBullets.Count > 0)
+        {
+            bullet = availableBullets.Dequeue();
+        }
+        else
+        {
+            bullet = CreateBullet();
+        }
+
+        bullet.transform.SetParent(null, false);
+        bullet.SetActive(true);
+
+        if (lifespan > 0f)
+        {
+            StartCoroutine(DeactivateAfterTime(bullet, lifespan));
+        }
+        return bullet;
+    }
+
     public void ReturnBullet(GameObject bullet)
     {
-        bullet.SetActive(false); // Desactiva la bala para que se pueda reutilizar
+        if (bullet == null) return;
+        bullet.SetActive(false);
+        bullet.transform.SetParent(poolParent, false);
+        availableBullets.Enqueue(bullet);
     }
-    private IEnumerator DeactivateBulletAfterTime(GameObject bullet, float time)
+
+    private System.Collections.IEnumerator DeactivateAfterTime(GameObject bullet, float time)
     {
         yield return new WaitForSeconds(time);
-        ReturnBullet(bullet);
-
+        if (bullet != null)
+        {
+            ReturnBullet(bullet);
+        }
     }
 }

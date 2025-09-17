@@ -1,35 +1,34 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class MeteoritoSpawnerL : MonoBehaviour
 {
-    public GameObject meteoritoPrefab; // Prefab del meteorito
-    public float spawnInterval = 15f; // Intervalo de aparición en segundos
-    public float meteoritoSpeed = 5f; // Velocidad del meteorito
-    public Vector2 spawnPosition = new Vector2(0f, 6f); // Posición fija de spawn
+    [SerializeField] private MeteoritoPool meteoritoPool;   // Asigna aquí tu pool de meteoritos
+    [SerializeField] private float spawnInterval = 15f;
+    [SerializeField] private float meteoritoSpeed = 5f;
+    [SerializeField] private Vector2 spawnPosition = new Vector2(0f, 6f);
+    [SerializeField] private float meteoritoLifetime = 10f; // Tiempo antes de devolver al pool
 
-    public GameObject warningSprite; // Sprite de advertencia
-    public float warningDuration = 3f; // Tiempo que el sprite de advertencia estará activo
+    [SerializeField] private GameObject warningSprite;
+    [SerializeField] private float warningDuration = 3f;
 
     private void Awake()
     {
         if (warningSprite != null)
         {
-            warningSprite.SetActive(false); // Asegúrate de que el sprite esté inicialmente desactivado
+            warningSprite.SetActive(false);
         }
     }
 
     private void OnEnable()
     {
-        // Inicia el spawn solo cuando el spawner esté activado
-        InvokeRepeating("StartWarningSequence", spawnInterval, spawnInterval);
+        // Usamos nameof para evitar errores de cadena y activar el spawn repetido
+        InvokeRepeating(nameof(StartWarningSequence), spawnInterval, spawnInterval);
     }
 
     private void OnDisable()
     {
-        // Detiene el spawn cuando el spawner esté desactivado
-        CancelInvoke("StartWarningSequence");
+        CancelInvoke(nameof(StartWarningSequence));
     }
 
     private void StartWarningSequence()
@@ -42,25 +41,45 @@ public class MeteoritoSpawnerL : MonoBehaviour
 
     private IEnumerator WarningSequence()
     {
-        // Mostrar el sprite de advertencia
         warningSprite.SetActive(true);
         yield return new WaitForSeconds(warningDuration);
-
-        // Ocultar el sprite y spawnear el meteorito
         warningSprite.SetActive(false);
         SpawnMeteorito();
     }
 
     private void SpawnMeteorito()
     {
-        // Instanciar el meteorito en la posición fija
-        GameObject meteorito = Instantiate(meteoritoPrefab, spawnPosition, Quaternion.identity);
+        if (meteoritoPool == null)
+        {
+            Debug.LogWarning("[MeteoritoSpawnerL] meteoritoPool es null. Asigna una referencia al pool en el Inspector.", this);
+            return;
+        }
 
-        // Darle una velocidad en diagonal hacia abajo
+        // Obtener un meteorito del pool y colocarlo en la posición de spawn
+        GameObject meteorito = meteoritoPool.GetMeteorito();
+        meteorito.transform.position = spawnPosition;
+
+        // Mantener la misma dirección diagonal hacia la derecha (2f, -meteoritoSpeed)
         Rigidbody2D rb = meteorito.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            rb.velocity = new Vector2(2f, -meteoritoSpeed); // Ajusta la dirección de la diagonal aquí si lo deseas
+            rb.velocity = new Vector2(2f, -meteoritoSpeed);
+        }
+
+        // Devolver el meteorito al pool tras un tiempo de vida, si se desea
+        if (meteoritoLifetime > 0f)
+        {
+            StartCoroutine(ReturnMeteoritoAfterTime(meteorito, meteoritoLifetime));
+        }
+    }
+
+    private IEnumerator ReturnMeteoritoAfterTime(GameObject meteorito, float lifetime)
+    {
+        yield return new WaitForSeconds(lifetime);
+        // Comprobar que sigue activo antes de devolverlo
+        if (meteorito != null && meteorito.activeInHierarchy)
+        {
+            meteoritoPool.ReturnMeteorito(meteorito);
         }
     }
 }
