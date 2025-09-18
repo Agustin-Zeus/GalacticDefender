@@ -18,10 +18,5 @@ public class Lifes : MonoBehaviour
                 Destroy(this.gameObject);
             }
         }
-
-        if (other.gameObject.CompareTag("kk"))
-        {
-            Destroy(this.gameObject);
-        }
     }
 }
