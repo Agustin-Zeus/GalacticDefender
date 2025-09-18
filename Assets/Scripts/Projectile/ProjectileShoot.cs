@@ -176,7 +176,7 @@ public class ProjectileShoot : MonoBehaviour
     private void FireChargedShot()
     { 
         audioSource.PlayOneShot(chargedShotSound);
-        playerAnimator.SetTrigger("ChargedShot"); // Activa la animación
+        playerAnimator.SetTrigger("ChargedShot"); 
     
         InvokeReinforcements();
     }
