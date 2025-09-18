@@ -51,7 +51,7 @@ public class GlobalMusicManager : MonoBehaviour
 
         if (currentSceneIndex == 2) newClip = level1Music;
         else if (currentSceneIndex == 3) newClip = level2Music;
-        else if (currentSceneIndex == 6) newClip = level3Music;
+        else if (currentSceneIndex == 4) newClip = level3Music;
 
         if (newClip != null && audioSource.clip != newClip)
         {
