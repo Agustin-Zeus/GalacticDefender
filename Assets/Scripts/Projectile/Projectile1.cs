@@ -14,12 +14,6 @@ public class Projectile1 : MonoBehaviour
     public AudioClip impactSound;         // Sonido al impactar
     private AudioSource audioSource;      // Componente para reproducir sonido
 
-    private float shootCooldown = 0.5f;   // Tiempo de espera entre disparos
-    private bool canShoot = true;         // Verifica si puede disparar
-
-
-
-
     public ProjectileShoot projectileShoot;
 
     void OnEnable()
@@ -70,13 +64,6 @@ public class Projectile1 : MonoBehaviour
     void Update()
     {
         transform.Translate(Vector2.up * moveSpeed * Time.deltaTime);
-    }
-
-    private IEnumerator ShootCooldownRoutine()
-    {
-        canShoot = false;                 // Desactiva la posibilidad de disparar
-        yield return new WaitForSeconds(shootCooldown);
-        canShoot = true;                  // Reactiva la posibilidad de disparar
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

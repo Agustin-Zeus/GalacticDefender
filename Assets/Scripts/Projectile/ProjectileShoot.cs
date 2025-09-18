@@ -298,8 +298,6 @@ public class ProjectileShoot : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
-    
-
         if (collision.CompareTag("PowerUpShoot"))
         {
             Clip.Play();

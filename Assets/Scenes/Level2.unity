@@ -193,6 +193,53 @@ MonoBehaviour:
   scoreLevel1: 0
   scoreLevel2: 0
   deathSound: {fileID: 8300000, guid: 87ad5fd7c23ee754e81d887e148dd4a3, type: 3}
+--- !u!1 &109712268
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 109712269}
+  - component: {fileID: 109712270}
+  m_Layer: 0
+  m_Name: ProjectilePool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &109712269
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 109712268}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.4043388, y: -0.053155065, z: 0.95094806}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &109712270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 109712268}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ca430763a6e35f4bb7b0e2f58d71da0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bulletPrefab: {fileID: 6631127048396045627, guid: b820b089f0909f64ca1e1e641e1b4de0, type: 3}
+  poolSize: 25
+  poolParent: {fileID: 0}
 --- !u!4 &127997801 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6327594430235253232, guid: 80c4f575d87808742a5851aa4eebe0f9, type: 3}
@@ -5643,7 +5690,7 @@ PrefabInstance:
       objectReference: {fileID: 5722372847896620196, guid: c18e19083bb626449a75ba9c1f6faeaa, type: 3}
     - target: {fileID: 4026643893887590378, guid: 0ef83b90375d44c4fa3433c0837070c8, type: 3}
       propertyPath: shootCooldown
-      value: 0.3
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4026643893887590378, guid: 0ef83b90375d44c4fa3433c0837070c8, type: 3}
       propertyPath: playerAnimator
@@ -5693,6 +5740,10 @@ PrefabInstance:
       propertyPath: reinforcementPoints.Array.data[5]
       value: 
       objectReference: {fileID: 216974763}
+    - target: {fileID: 4635074862210428967, guid: 0ef83b90375d44c4fa3433c0837070c8, type: 3}
+      propertyPath: poolSize
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 6299318943780586479, guid: 0ef83b90375d44c4fa3433c0837070c8, type: 3}
       propertyPath: m_Time
       value: 0.2
@@ -6796,3 +6847,4 @@ SceneRoots:
   - {fileID: 237057238}
   - {fileID: 1132772786957643206}
   - {fileID: 73030698728709646}
+  - {fileID: 109712269}
