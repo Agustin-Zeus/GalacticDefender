@@ -2,11 +2,9 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Video;
 using UnityEngine;
 
-
 public class VideoEndSceneChanger : MonoBehaviour
 {
-    public VideoPlayer videoPlayer; // Arrastra el VideoPlayer aquí en el Inspector
-  
+    public VideoPlayer videoPlayer; 
 
     void Start()
     {
@@ -18,6 +16,6 @@ public class VideoEndSceneChanger : MonoBehaviour
 
     void OnVideoEnd(VideoPlayer vp)
     {
-        SceneManager.LoadScene(10);
+        SceneManager.LoadScene(8);
     }
 }

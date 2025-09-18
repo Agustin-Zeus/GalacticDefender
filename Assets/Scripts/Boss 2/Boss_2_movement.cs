@@ -151,18 +151,18 @@ public class Boss_2_movement : MonoBehaviour
             yield break;
         }
 
-        // Muerte (una sola vez)
         isDying = true;
 
-        // Puntaje/flujo antes de cambiar de escena
         if (GameManager.Instance != null)
         {
             GameManager.Instance.AddScore(valueBoss);
             GameManager.Instance.EndLevel(2);
         }
-
-        // Destruir este GO y luego cargar la escena (LoadScene cambia en el próximo frame)
         Destroy(gameObject);
-        SceneManager.LoadScene(8); // Single por defecto. :contentReference[oaicite:5]{index=5}
+
+        var current = SceneManager.GetActiveScene();
+        LevelProgressStore.SetLastCompletedName(current.name);
+
+        SceneManager.LoadScene("WinScreen");
     }
 }

@@ -18,27 +18,18 @@ EditorBuildSettings:
     path: Assets/Scenes/Level2.unity
     guid: 86624eee050247c4dba5376abd8cb583
   - enabled: 1
-    path: Assets/Scenes/GameOverScreen1.unity
-    guid: 48437c34f4182754984efe25d60457b5
-  - enabled: 1
-    path: Assets/Scenes/WinScreen1.unity
-    guid: 07658f2859710a946b46d0d6007b1eb0
-  - enabled: 1
     path: Assets/Scenes/Level3.unity
     guid: c35b52051cd88c64d884bb7a275202d9
   - enabled: 1
-    path: Assets/Scenes/GameOverScreen2.unity
-    guid: 51774a5b617b8174898695e72ae44dab
+    path: Assets/Scenes/GameOverScreen.unity
+    guid: 48437c34f4182754984efe25d60457b5
   - enabled: 1
-    path: Assets/Scenes/WinScreen2.unity
-    guid: 888d88a1b7aebd34bb4e5fa3e6a76d98
+    path: Assets/Scenes/WinScreen.unity
+    guid: 07658f2859710a946b46d0d6007b1eb0
   - enabled: 1
-    path: Assets/Scenes/GameOverScreen3.unity
-    guid: 5c01fe9ca1c28a942b9a362774258e3a
+    path: Assets/Scenes/Cinematic.unity
+    guid: fd8ee6459c49cbb48bfbbb9e447416ab
   - enabled: 1
     path: Assets/Scenes/Credits.unity
     guid: 5e617e47351208a4ea1714179fd939c1
-  - enabled: 1
-    path: Assets/Scenes/WinScreen3.unity
-    guid: fd8ee6459c49cbb48bfbbb9e447416ab
   m_configObjects: {}

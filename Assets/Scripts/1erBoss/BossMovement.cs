@@ -37,10 +37,8 @@ public class BossMovement : MonoBehaviour
 
     }
 
-    // Update is called once per frame
     void Update()
     {
-
         transform.position = Vector2.MoveTowards(transform.position, MoveBoss[randomSpot].position, speed * Time.deltaTime);
         spriteRenderer = GetComponent<SpriteRenderer>();
 
@@ -65,7 +63,7 @@ public class BossMovement : MonoBehaviour
 
     private IEnumerator DamageCoroutine(float damage)
     {
-        health -= damage; // Reducir la salud
+        health -= damage; 
         healthbar.UpdateHealthbar(maxHealth, health);
 
         if (health > 0)
@@ -78,9 +76,13 @@ public class BossMovement : MonoBehaviour
 
         if (health <= 0)
         {
-            Destroy(gameObject); // Destruir el enemigo si su salud llega a 0
+            Destroy(gameObject); 
             GameManager.Instance.AddScore(valueBoss);
-            SceneManager.LoadScene(5);
+
+            var current = SceneManager.GetActiveScene();
+            LevelProgressStore.SetLastCompletedName(current.name);
+
+            SceneManager.LoadScene("WinScreen");
         }
 
         yield return null;
@@ -88,10 +90,9 @@ public class BossMovement : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // Verificar si el objeto colisionado tiene la etiqueta "Player"
+
         if (collision.gameObject.CompareTag("Player"))
         {
-            // Resta una vida al jugador
             GameManager.Instance.LoseLive(0.5f);
         }
     }

@@ -1,90 +1,85 @@
 using System.Collections;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class Menu : MonoBehaviour
 {
-    private float delayTime = 1f; // Tiempo de espera antes de cambiar de escena
+    [SerializeField] private float delayTime = 1f;
 
-    // Métodos principales del menú
-    public void StartGame()
-    {
+    [SerializeField] private string mainMenuScene = "Menu";
+    [SerializeField] private string levelSelectScene = "Select Levels";
+    [SerializeField] private string level1Scene = "Level1";
+    [SerializeField] private string level2Scene = "Level2";
+    [SerializeField] private string level3Scene = "Level3";
+    [SerializeField] private string defeatScene = "GameOverScreen";
 
-        Invoke(nameof(LoadScene2), delayTime); // Comienza desde el nivel 1
-    }
-
-    public void LevelSelection()
-    {
-        Invoke(nameof(LoadScene1), delayTime); // Carga la escena de selección de nivel
-    }
-
-    public void Level1()
-    {
-
-        Invoke(nameof(LoadScene2), delayTime); // Escena asignada al Nivel 1
-    }
-
-    public void Level2()
-    {
-
-        Invoke(nameof(LoadScene3), delayTime); // Escena asignada al Nivel 2
-    }
-
-    public void Level3()
-    {
-
-        Invoke(nameof(LoadScene6), delayTime); // Escena asignada al Nivel 3
-    }
+    public void StartGame() => LoadSceneAfterDelay(level1Scene);
+    public void LevelSelection() => LoadSceneAfterDelay(levelSelectScene);
+    public void Level1() => LoadSceneAfterDelay(level1Scene);
+    public void Level2() => LoadSceneAfterDelay(level2Scene);
+    public void Level3() => LoadSceneAfterDelay(level3Scene);
 
     public void BackMenu()
     {
-        GameManager.Instance.CheckHighScore(); // Guardar el high score antes de resetear
-                                               //GameManager.Instance.ResetTotalScore();
-
-        Invoke(nameof(LoadScene0), delayTime); // Regresa al menú principal
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.CheckHighScore();
+        }
+        LoadSceneAfterDelay(mainMenuScene);
     }
 
     public void Exit()
     {
-        Invoke(nameof(QuitGame), delayTime); // Sale del juego
+        StartCoroutine(QuitAfterDelay());
     }
 
-    // Métodos para cargar escenas específicas
-    private void LoadScene0()
+    public void RetryLastLevel()
     {
-        SceneManager.LoadScene(0); // Menú principal
+        int idx = LastLevelStore.Get();
+        Debug.Log($"[Menu] RetryLastLevel -> idx={idx}");
+
+        if (idx >= 0)
+        {
+            StartCoroutine(LoadAfterDelay(idx)); 
+        }
+        else
+        {
+            LoadSceneAfterDelay(levelSelectScene);
+        }
     }
 
-    private void LoadScene1()
+    public void NextLevel()
     {
-        SceneManager.LoadScene(1); // Selección de nivel
+        string lastCompleted = LevelProgressStore.GetLastCompletedName();
+        Debug.Log($"[Menu] NextLevel desde: {lastCompleted}");
+
+        if (lastCompleted == level1Scene) LoadSceneAfterDelay(level2Scene);
+        else if (lastCompleted == level2Scene) LoadSceneAfterDelay(level3Scene);
+        else
+            LoadSceneAfterDelay(levelSelectScene); 
     }
 
-    private void LoadScene2()
+    private void LoadSceneAfterDelay(string sceneName)
     {
-        SceneManager.LoadScene(2); // Nivel 1
+        StartCoroutine(LoadAfterDelay(sceneName));
     }
 
-    private void LoadScene3()
+    private IEnumerator LoadAfterDelay(string sceneName)
     {
-        SceneManager.LoadScene(3); // Nivel 2
+        yield return new WaitForSeconds(delayTime);
+        SceneManager.LoadScene(sceneName);
     }
 
-    private void LoadScene6()
+    private IEnumerator LoadAfterDelay(int buildIndex)
     {
-        SceneManager.LoadScene(6); // Nivel 3
+        yield return new WaitForSeconds(delayTime);
+        SceneManager.LoadScene(buildIndex);
     }
 
-    private void QuitGame()
+    private IEnumerator QuitAfterDelay()
     {
-        Application.Quit(); // Cierra la aplicación
+        yield return new WaitForSeconds(delayTime);
+        Application.Quit();
     }
-
-    // Método auxiliar para reiniciar el estado del GameManager
-    private void ResetGameManager()
-    {
-        GameManager.Instance.ResetTotalScore();
-
-    }
-
 }

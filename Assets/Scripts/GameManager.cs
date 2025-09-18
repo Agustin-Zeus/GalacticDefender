@@ -10,7 +10,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [SerializeField] public HUD hud; // Referencia al HUD para acceder al slider de vidas
+    [SerializeField] public HUD hud; 
     public int TotalScore { get { return totalScore; } }
 
     private float lives = 3;
@@ -19,11 +19,11 @@ public class GameManager : MonoBehaviour
 
     public int meteorScoreThreshold;
     public int bossScoreThreshold;
-    public int stormScoreThreshold; // Umbral de puntos para activar la tormenta
+    public int stormScoreThreshold; 
     private int totalScore = 0;
 
     private bool bossInvoked = false;
-    private bool stormActivated = false; // Controla si la tormenta ya se activó
+    private bool stormActivated = false; 
     private bool healthBarBoss = false;
 
     public GameObject boss;
@@ -31,21 +31,19 @@ public class GameManager : MonoBehaviour
 
     private bool isImmortal = false;
 
-    public MeteoritoSpawner[] meteoritoSpawners; // Referencia al MeteoritoSpawner
+    public MeteoritoSpawner[] meteoritoSpawners; 
     public MeteoritoSpawnerL[] meteoritoSpawnersL;
-    public StormManager stormManager; // Referencia al StormManager
+    public StormManager stormManager; 
 
-    public float meteoritoRandomizeInterval = 5f; // Intervalo para randomizar spawners
+    public float meteoritoRandomizeInterval = 5f; 
 
-    public GameObject player; // Referencia al GameObject del jugador
+    public GameObject player; 
 
     [SerializeField] private VideoPlayer eventVideoPlayer; // VideoPlayer que reproducirá el video del evento
-
 
     public TMPro.TextMeshPro ScoreText;
     public TMPro.TextMeshPro HighScore;
     public TMPro.TextMeshPro FinalScoreText;
-
 
     public int highScoreLevel1 = 0; // High score para el nivel 1
     public int highScoreLevel2 = 0; // High score para el nivel 2
@@ -53,28 +51,22 @@ public class GameManager : MonoBehaviour
     public int scoreLevel1;
     public int scoreLevel2;
 
-
-    // Sonido de muerte
     public AudioClip deathSound;
     private AudioSource audioSource;
 
     private bool bossMusicPlayed = false; // Controla si la música ya cambió
 
+    public int LastLevelIndex { get; set; }  
 
-    void Awake()
+    private void Awake()
     {
-        if (Instance == null)
+        if (Instance != null && Instance != this)
         {
-            Instance = this;
-
-
-        }
-        else
-        {
-
+            Destroy(gameObject);            // mata duplicados
             return;
         }
-        LoadHighScores(); // Cargar los high scores
+        Instance = this;
+        LoadHighScores(); 
     }
 
     public void Start()
@@ -98,7 +90,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-
     public void SetPlayerInvulnerable(bool state)
     {
         playerInvulnerable = state;
@@ -112,14 +103,14 @@ public class GameManager : MonoBehaviour
 
         PlayerPrefs.SetInt("TotalScore", totalScore);
         PlayerPrefs.Save();
-        // Guardar High Score
+
         int highScore = PlayerPrefs.GetInt("HighScore", 0);
         if (totalScore > highScore)
         {
             PlayerPrefs.SetInt("HighScore", totalScore);
             PlayerPrefs.Save();
         }
-        // Activa la tormenta cuando se alcanza el puntaje necesario, si no se ha activado aún
+
         if (!stormActivated && totalScore >= stormScoreThreshold)
         {
             ActivateStorm();
@@ -135,8 +126,8 @@ public class GameManager : MonoBehaviour
     {
         if (stormManager != null)
         {
-            stormActivated = true; // Marcar que la tormenta ya fue activada
-            stormManager.StartStorm(); // Inicia el evento de tormenta
+            stormActivated = true; 
+            stormManager.StartStorm(); 
         }
     }
 
@@ -162,7 +153,6 @@ public class GameManager : MonoBehaviour
         lives -= damage;
         hud.UpdateLivesSlider(lives);
 
-        // Llamar a las corutinas para el efecto visual
         if (player != null)
         {
             StartCoroutine(FlashRedAndInvulnerability());
@@ -172,27 +162,15 @@ public class GameManager : MonoBehaviour
         {
             PlayDeathSound();
 
-            int currentScene = SceneManager.GetActiveScene().buildIndex; // Obtiene el índice de la escena actual
+            int currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
 
-            if (currentScene == 2)
-            {
-                CheckHighScore();
-                StartCoroutine(WaitAndLoadScene(4));
-            }
-            else if (currentScene == 3)
-            {
-                CheckHighScore();
-                StartCoroutine(WaitAndLoadScene(7));
-            }
-            else if (currentScene == 6)
-            {
-                CheckHighScore();
-                StartCoroutine(WaitAndLoadScene(9));
-            }
+            LastLevelStore.Set(currentScene);
+
+            CheckHighScore();
+            StartCoroutine(WaitAndLoadScene(5));
         }
     }
 
-    // Combinar FlashRed con la activación de la opacidad de invulnerabilidad
     public IEnumerator FlashRedAndInvulnerability()
     {
         SpriteRenderer spriteRenderer = player.GetComponent<SpriteRenderer>();
@@ -225,8 +203,8 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator WaitAndLoadScene(int sceneIndex)
     {
-        yield return new WaitForSeconds(2f); // Espera 2 segundos
-        SceneManager.LoadScene(sceneIndex); // Carga la escena
+        yield return new WaitForSeconds(2f); 
+        SceneManager.LoadScene(sceneIndex); 
     }
 
 
@@ -321,7 +299,6 @@ public class GameManager : MonoBehaviour
     {
         if (bossInvoked) return; // Si el jefe está invocado, no se randomizan los spawners
 
-        // Activar/desactivar aleatoriamente los spawners de tipo común
         foreach (var spawner in meteoritoSpawners)
         {
             if (spawner != null)
@@ -330,12 +307,11 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Activar/desactivar aleatoriamente los spawners de tipo L
         foreach (var spawnerL in meteoritoSpawnersL)
         {
             if (spawnerL != null)
             {
-                spawnerL.gameObject.SetActive(Random.value > 0.5f); // Activa/desactiva aleatoriamente
+                spawnerL.gameObject.SetActive(Random.value > 0.5f); 
             }
         }
     }
@@ -345,7 +321,6 @@ public class GameManager : MonoBehaviour
         bossInvoked = true;
         healthBarBoss = true;
 
-        // Inicia la coroutine para mostrar el evento y spawnear el boss
         StartCoroutine(InvokeBossWithDelay());
     }
 
@@ -353,7 +328,6 @@ public class GameManager : MonoBehaviour
     {
 
         yield return new WaitForSeconds(1f);
-        // Reproducir el video del evento
         if (eventVideoPlayer != null)
         {
             eventVideoPlayer.gameObject.SetActive(true); // Activar el VideoPlayer
@@ -366,7 +340,6 @@ public class GameManager : MonoBehaviour
             eventVideoPlayer.gameObject.SetActive(false); // Desactivar el VideoPlayer
         }
 
-        // Esperar los 0.3 segundos adicionales
         yield return new WaitForSeconds(0.3f);
 
         // Spawn del jefe
@@ -381,7 +354,6 @@ public class GameManager : MonoBehaviour
             lifeBarBoss.SetActive(true);
         }
 
-        // Detener meteoritos
         CancelInvoke(nameof(RandomizeMeteoritoSpawners));
 
         foreach (var spawner in meteoritoSpawners)
@@ -404,12 +376,8 @@ public class GameManager : MonoBehaviour
     public void ResetTotalScore()
     {
         totalScore = 0;
-        hud.UpdateScore(totalScore); // Asegurar que el HUD refleje el cambio
+        hud.UpdateScore(totalScore); 
     }
-
-
-
-
 
     private void PlayDeathSound()
     {
@@ -418,7 +386,6 @@ public class GameManager : MonoBehaviour
             audioSource.PlayOneShot(deathSound);
         }
     }
-
 
     public bool IsPlayerInvulnerable()
     {

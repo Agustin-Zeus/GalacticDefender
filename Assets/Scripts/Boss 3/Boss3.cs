@@ -15,14 +15,12 @@ public class Boss3 : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     public AudioSource Clip;
 
-    // cache de yield para evitar GC en cada golpe
     private static readonly WaitForSeconds hitFlashDelay = new WaitForSeconds(0.1f);
 
     private bool isDying;
 
     void Awake()
     {
-        // Autowire defensivo para evitar NRE si te olvidaste de arrastrar refs
         if (!spriteRenderer) TryGetComponent(out spriteRenderer);
         if (!Clip) TryGetComponent(out Clip);
         if (!healthbar) healthbar = GetComponentInChildren<HealthbarBoss>(true); // incluye hijos inactivos
@@ -38,12 +36,9 @@ public class Boss3 : MonoBehaviour
         if (healthbar) healthbar.UpdateHealthbar(maxHealth, health);
     }
 
-    // No hagas GetComponent cada frame — cacheado en Awake
-    // void Update() { }
-
     public void TakeDamage(float damage)
     {
-        if (isDying) return;           // evita reentradas
+        if (isDying) return;         
         StartCoroutine(DamageCoroutine(damage));
     }
 
@@ -58,20 +53,17 @@ public class Boss3 : MonoBehaviour
             if (spriteRenderer)
             {
                 spriteRenderer.color = Color.red;
-                yield return hitFlashDelay; // cacheado
+                yield return hitFlashDelay; 
                 if (spriteRenderer) spriteRenderer.color = Color.white;
             }
             yield break;
         }
 
-        // Muerte (una sola vez)
         isDying = true;
-
-        // Puntaje/fin de nivel ANTES de cambiar de escena
+  
         if (GameManager.Instance != null)
         {
             GameManager.Instance.AddScore(valueBoss);
-            // si tenés lógica de fin, podrías llamarla aquí también
         }
         else
         {
@@ -80,8 +72,7 @@ public class Boss3 : MonoBehaviour
 
         Destroy(gameObject);
 
-        // LoadScene se completa en el PRÓXIMO frame (no inmediato)
-        SceneManager.LoadScene(11); // victoria boss 3
+        SceneManager.LoadScene("Cinematic");
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
