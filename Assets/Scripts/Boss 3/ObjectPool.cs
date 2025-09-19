@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class ObjectPool : MonoBehaviour
 {
-    public GameObject objectPrefab;   // Prefab del primer tipo
-    public GameObject objectPrefab2;  // Prefab del segundo tipo
+    public GameObject objectPrefab;   
+    public GameObject objectPrefab2;  
     public int poolSize = 20;
 
     private readonly Queue<GameObject> objectPool = new Queue<GameObject>();
@@ -20,7 +20,6 @@ public class ObjectPool : MonoBehaviour
             obj1.SetActive(false);
             obj2.SetActive(false);
 
-            // (opcional) parentear al contenedor para orden en jerarquía
             obj1.transform.SetParent(transform);
             obj2.transform.SetParent(transform);
 
@@ -33,20 +32,17 @@ public class ObjectPool : MonoBehaviour
     {
         if (useSecondPrefab)
         {
-            // Desencola hasta encontrar uno válido o vaciar
             while (objectPool2.Count > 0)
             {
                 var obj = objectPool2.Dequeue();
-                if (obj) // Unity null: false si está destruido
+                if (obj)
                 {
                     obj.transform.SetParent(null, false);
                     obj.SetActive(true);
                     return obj;
                 }
-                // si estaba destruido, seguimos buscando
             }
 
-            // No había válidos -> crear nuevo
             var created = Instantiate(objectPrefab2);
             created.SetActive(true);
             return created;
@@ -72,7 +68,6 @@ public class ObjectPool : MonoBehaviour
 
     public void ReturnObject(GameObject obj, bool useSecondPrefab = false)
     {
-        // Si el objeto fue destruido (MissingReference), no intentes usarlo
         if (!obj) return; // Unity null check
 
         obj.SetActive(false);
