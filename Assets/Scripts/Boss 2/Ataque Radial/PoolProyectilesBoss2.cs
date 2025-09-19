@@ -3,54 +3,135 @@ using UnityEngine;
 
 public class PoolProyectilesBoss2 : MonoBehaviour
 {
-    public GameObject projectilePrefab; // Prefabricado del proyectil
-    public int poolSize = 20; // Tamaño inicial del pool
-    private List<GameObject> pool; // Lista que almacena los proyectiles
+    public static PoolProyectilesBoss2 Instance;
 
-    void Start()
+    [Header("Prefab & Pool")]
+    [SerializeField] private GameObject projectilePrefab;  
+    [SerializeField] private int initialSize = 20;         
+    [SerializeField] private bool canExpand = true;       
+    [SerializeField] private int expandBy = 10;           
+
+    [Header("Reset al devolver")]
+    [SerializeField] private bool resetPhysicsOnReturn = true;
+    [SerializeField] private bool resetTransformOnReturn = true;
+
+    private readonly List<GameObject> all = new();         
+    private readonly Queue<GameObject> available = new();  
+    private void Awake()
     {
-        pool = new List<GameObject>();
-        for (int i = 0; i < poolSize; i++)
+        Instance = this;
+        Prewarm(initialSize);
+    }
+
+    private void OnValidate()
+    {
+        if (initialSize < 0) initialSize = 0;
+        if (expandBy < 1) expandBy = 1;
+    }
+
+    private void Prewarm(int count)
+    {
+        if (projectilePrefab == null)
         {
-            GameObject proj = Instantiate(projectilePrefab); // Instanciamos los proyectiles
-            proj.SetActive(false); // Los desactivamos para que no estén en la escena
-            pool.Add(proj); // Los añadimos al pool
+            Debug.LogError("[PoolProyectilesBoss2] Asigná 'projectilePrefab' en el inspector.");
+            return;
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            var go = Instantiate(projectilePrefab, transform); 
+            go.SetActive(false);
+
+            var comp = go.GetComponent<Boss_2_Proyectile>();
+            if (comp != null) comp.SetPool(this);
+
+            all.Add(go);
+            available.Enqueue(go);
         }
     }
 
-    // Obtiene un proyectil del pool
     public GameObject GetProjectile()
     {
-        foreach (var proj in pool)
+        if (available.Count > 0)
         {
-            if (!proj.activeInHierarchy) // Si el proyectil no está activo
+            var go = available.Dequeue();
+            go.SetActive(true);
+            return go;
+        }
+
+        if (canExpand)
+        {
+            Prewarm(expandBy);
+            if (available.Count > 0)
             {
-                proj.SetActive(true); // Lo activamos
-                return proj; // Lo devolvemos
+                var go = available.Dequeue();
+                go.SetActive(true);
+                return go;
             }
         }
 
-        // Si no hay proyectiles inactivos, expandimos el pool
-        Debug.LogWarning("Expandiendo el pool de proyectiles.");
-        GameObject newProj = Instantiate(projectilePrefab); // Creamos un nuevo proyectil
-        newProj.SetActive(true); // Lo activamos
-        pool.Add(newProj); // Lo agregamos al pool
-        return newProj; // Lo devolvemos
+        Debug.LogWarning("[PoolProyectilesBoss2] Pool agotado y no puede expandirse.");
+        return null;
     }
 
-    // Devuelve un proyectil al pool
     public void ReturnProjectile(GameObject projectile)
     {
-        projectile.SetActive(false); // Desactivamos el proyectil
+        if (projectile == null) return;
 
-        // Si el proyectil tiene físicas (colisionador, etc.), reseteamos su posición y velocidad para evitar problemas
-        Rigidbody2D rb = projectile.GetComponent<Rigidbody2D>(); // Suponiendo que es un Rigidbody2D
-        if (rb != null)
+        projectile.transform.SetParent(transform, worldPositionStays: false);
+
+        if (resetPhysicsOnReturn)
         {
-            rb.velocity = Vector2.zero; // Reseteamos la velocidad
-            rb.angularVelocity = 0f; // Reseteamos la velocidad angular
+            var rb2d = projectile.GetComponent<Rigidbody2D>();
+            if (rb2d != null)
+            {
+                rb2d.velocity = Vector2.zero;
+                rb2d.angularVelocity = 0f;
+            }
+
+            var rb3d = projectile.GetComponent<Rigidbody>();
+            if (rb3d != null)
+            {
+                rb3d.velocity = Vector3.zero;
+                rb3d.angularVelocity = Vector3.zero;
+            }
         }
 
-        projectile.transform.position = Vector3.zero; // Ajusta según sea necesario
+        if (resetTransformOnReturn)
+        {
+            projectile.transform.localPosition = Vector3.zero;
+            projectile.transform.localRotation = Quaternion.identity;
+            projectile.transform.localScale = Vector3.one;
+        }
+
+        projectile.SetActive(false);
+        available.Enqueue(projectile);
     }
+
+    public void ClearPool()
+    {
+        for (int i = 0; i < all.Count; i++)
+        {
+            var go = all[i];
+            if (go != null && go.activeInHierarchy)
+                ReturnProjectile(go);
+        }
+    }
+
+    public Boss_2_Proyectile Spawn(Vector3 position, Quaternion rotation, Vector3 direction, float lifetimeOverride = -1f)
+    {
+        var go = GetProjectile();
+        if (go == null) return null;
+
+        go.transform.SetPositionAndRotation(position, rotation);
+
+        var comp = go.GetComponent<Boss_2_Proyectile>();
+        if (comp != null)
+            comp.SetDirection(direction, this, lifetimeOverride);
+
+        return comp;
+    }
+
+    public int TotalCount => all.Count;
+    public int AvailableCount => available.Count;
 }

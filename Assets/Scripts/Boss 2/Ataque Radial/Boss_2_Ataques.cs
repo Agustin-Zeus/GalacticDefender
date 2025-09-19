@@ -3,128 +3,148 @@ using UnityEngine;
 
 public class Boss_2_Ataques : MonoBehaviour
 {
-    public PoolProyectilesBoss2 projectilePool;
-    public float projectileSpeed = 5f;
+    [Header("Pools")]
+    public PoolProyectilesBoss2 projectilePool; 
+    public PoolMisil_boss2 MisilPool;         
 
-    // Ataque lateral
-    public PoolMisil_boss2 MisilPool;
-    public float timeBetweenShots = 0.5f;
-    public int numProjectiles = 5;
-    public float attackHeight = 5f;
-    public float distanceOffScreen = 10f;
-    private bool isAttacking = false;
+    [Header("Radial Attack")]
+    [SerializeField] private int numProjectiles = 12;
+    [SerializeField] private float projectileSpeed = 5f;
+    [SerializeField] private float radialInterval = 3f;
 
-    public float cooldownTime = 5f;
-    private bool isCooldown = false;
+    [Header("Missile Attack")]
+    [SerializeField] private int missileCount = 5;       
+    [SerializeField] private float timeBetweenShots = 0.5f;
+    [SerializeField] private float attackHeight = 5f;
+    [SerializeField] private float distanceOffScreen = 10f;
+    [SerializeField] private float missileInterval = 3f;
+
+    [Header("Warning Sprite")]
+    [SerializeField] private GameObject missileWarningSprite;
+    [SerializeField] private float warningDuration = 1.5f;
+
+    [Header("Cycle & Cooldown")]
+    [SerializeField] private float cycleDuration = 12f;   
+    [SerializeField] private float cooldownDuration = 3f; 
     private bool isCooldownActive = false;
 
-    public AudioSource clipAttack;
-    public AudioSource clipTentaculos;
+    [Header("Audio")]
+    public AudioSource clipAttack;     
+    public AudioSource clipTentaculos;  
 
-    // Sprite de advertencia
-    public GameObject missileWarningSprite;
-    public float warningDuration = 1.5f;
-
-    void Start()
+    private void Start()
     {
-        AttackCycle();
-        if (missileWarningSprite != null)
-        {
-            missileWarningSprite.SetActive(false); // Asegúrate de que esté desactivado al inicio
-        }
+        if (missileWarningSprite) missileWarningSprite.SetActive(false);
+        StartAttackCycle();
     }
 
-    private void AttackCycle()
+    private void OnDisable()
     {
-        InvokeRepeating(nameof(RadialAttack), 1f, 3f);
-        InvokeRepeating(nameof(LaunchMissiles), 0f, 3f);
-        StartCooldown();
+        CancelInvoke();
+        StopAllCoroutines();
+        projectilePool?.ClearPool();
+        if (missileWarningSprite) missileWarningSprite.SetActive(false);
     }
 
-    private void StartCooldown()
+    private void StartAttackCycle()
     {
-        Invoke("StartCooldownCycle", 12f);
+        InvokeRepeating(nameof(RadialAttack), 1f, radialInterval);
+        InvokeRepeating(nameof(LaunchMissiles), 0f, missileInterval);
+        Invoke(nameof(StartCooldownCycle), cycleDuration);
     }
 
     private void StartCooldownCycle()
     {
-        CancelInvoke("RadialAttack");
-        CancelInvoke("LaunchMissiles");
-
+        CancelInvoke(nameof(RadialAttack));
+        CancelInvoke(nameof(LaunchMissiles));
         isCooldownActive = true;
 
-        Invoke("EndCooldown", 3f);
+        projectilePool?.ClearPool();
+
+        Invoke(nameof(EndCooldown), cooldownDuration);
     }
 
     private void EndCooldown()
     {
         isCooldownActive = false;
-        AttackCycle();
+        StartAttackCycle();
     }
 
-    void LaunchMissiles()
+    private void LaunchMissiles()
     {
-        if (isCooldownActive) return;
-
+        if (isCooldownActive || MisilPool == null) return;
         StartCoroutine(LaunchMissileWithWarning());
     }
 
-    IEnumerator LaunchMissileWithWarning()
+    private IEnumerator LaunchMissileWithWarning()
     {
-        // Mostrar advertencia
-        if (missileWarningSprite != null)
-        {
-            missileWarningSprite.SetActive(true);
-        }
-
+        if (missileWarningSprite) missileWarningSprite.SetActive(true);
         yield return new WaitForSeconds(warningDuration);
+        if (missileWarningSprite) missileWarningSprite.SetActive(false);
 
-        // Ocultar advertencia
-        if (missileWarningSprite != null)
+        for (int i = 0; i < missileCount; i++)
         {
-            missileWarningSprite.SetActive(false);
-        }
-
-        // Disparar misiles
-        for (int i = 0; i < numProjectiles; i++)
-        {
-            LaunchMissile(i);
+            LaunchSingleMissile(i);
+            if (timeBetweenShots > 0f)
+                yield return new WaitForSeconds(timeBetweenShots);
         }
     }
 
-    void LaunchMissile(int index)
+    private void LaunchSingleMissile(int index)
     {
-        GameObject missile = MisilPool.GetProjectile();
-        missile.GetComponent<Misil_boss_2>().SetPool(MisilPool);
+        var missile = MisilPool.GetProjectile();
+        if (missile == null) return;
 
-        float side = index % 2 == 0 ? -1f : 1f;
-        missile.transform.position = new Vector3(side * distanceOffScreen, Random.Range(-attackHeight, 2), 0);
+        var comp = missile.GetComponent<Misil_boss_2>();
+        if (comp == null)
+        {
+            missile.SetActive(false);
+            return;
+        }
+
+        comp.SetPool(MisilPool);
+
+        float side = (index % 2 == 0) ? -1f : 1f; 
+        float y = Random.Range(-attackHeight, 2f);
+        missile.transform.SetPositionAndRotation(new Vector3(side * distanceOffScreen, y, 0f), Quaternion.identity);
         missile.SetActive(true);
+        comp.SetHorizontalMovement(side);
 
-        missile.GetComponent<Misil_boss_2>().SetHorizontalMovement(side);
-        clipTentaculos.Play();
+        if (clipTentaculos) clipTentaculos.Play();
     }
 
-    void RadialAttack()
+    private void RadialAttack()
     {
-        if (isCooldownActive) return;
+        if (isCooldownActive || projectilePool == null) return;
 
-        int numProjectiles = 12;
+        if (clipAttack) clipAttack.Play(); 
+
         float angleStep = 360f / numProjectiles;
         float angle = 0f;
+        Vector3 origin = transform.position;
 
         for (int i = 0; i < numProjectiles; i++)
         {
-            clipAttack.Play();
+            var proj = projectilePool.GetProjectile();
+            if (proj == null) continue;
 
-            GameObject proj = projectilePool.GetProjectile();
-            proj.transform.position = transform.position;
+            proj.transform.position = origin;
 
-            float dirX = Mathf.Sin(angle * Mathf.Deg2Rad);
-            float dirY = Mathf.Cos(angle * Mathf.Deg2Rad);
-            Vector3 direction = new Vector3(dirX, dirY, 0);
+            var comp = proj.GetComponent<Boss_2_Proyectile>();
+            if (comp != null)
+            {
+                float dirX = Mathf.Sin(angle * Mathf.Deg2Rad);
+                float dirY = Mathf.Cos(angle * Mathf.Deg2Rad);
+                Vector3 direction = new Vector3(dirX, dirY, 0f);
 
-            proj.GetComponent<Boss_2_Proyectile>().SetDirection(direction, projectilePool);
+                comp.speed = projectileSpeed;
+
+                comp.SetDirection(direction, projectilePool);
+            }
+            else
+            {
+                proj.SetActive(false);
+            }
 
             angle += angleStep;
         }
