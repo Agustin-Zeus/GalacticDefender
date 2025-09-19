@@ -1,34 +1,25 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class BulletBoss : MonoBehaviour
 {
     private Vector2 moveDirection;
-    [SerializeField]
-    private float moveSpeed;
+    [SerializeField] private float moveSpeed = 5f;
+
+    private Coroutine autoDisableRoutine;
 
     private void OnEnable()
     {
-        Invoke("Destroy", 3f);
+        autoDisableRoutine = StartCoroutine(AutoDisable(3f));
     }
 
-    private void Start()
-    {
-       
-    }
-
-
-     void Update()
+    private void Update()
     {
         transform.Translate(moveDirection * moveSpeed * Time.deltaTime);
-        //this is the bottom-left point of the screen
-        Vector2 min = Camera.main.ViewportToWorldPoint(new Vector2(0, 0));
 
-        //top-rigth point of the screen
+        Vector2 min = Camera.main.ViewportToWorldPoint(new Vector2(0, 0));
         Vector2 max = Camera.main.ViewportToWorldPoint(new Vector2(1, 1));
 
-        //if the bullet goes outside the sreen, destroy
         if ((transform.position.x < min.x) || (transform.position.x > max.x) ||
             (transform.position.y < min.y) || (transform.position.y > max.y))
         {
@@ -40,24 +31,34 @@ public class BulletBoss : MonoBehaviour
     {
         moveDirection = dir.normalized;
     }
-    
-    private void Destroy() 
-    
+
+    private IEnumerator AutoDisable(float time)
     {
+        yield return new WaitForSeconds(time);
         gameObject.SetActive(false);
     }
 
     private void OnDisable()
     {
-        CancelInvoke();
+        if (autoDisableRoutine != null)
+            StopCoroutine(autoDisableRoutine);
     }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.gameObject.CompareTag("Player"))
+        if (other.CompareTag("Player"))
         {
             GameManager.Instance.LoseLive(1f);
             gameObject.SetActive(false);
-            //Aplicar aqui el instance de la animacion del impacto 
+
+        }
+    }
+    public static void StopAndClearAll()
+    {
+        BulletBoss[] bullets = FindObjectsOfType<BulletBoss>(true);
+        foreach (var b in bullets)
+        {
+            b.gameObject.SetActive(false);
         }
     }
 }

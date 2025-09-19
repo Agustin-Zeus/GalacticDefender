@@ -1,45 +1,61 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Audio;
 
 public class FireBoss : MonoBehaviour
 {
+    [Header("Radial")]
     [SerializeField] private int bulletsAmount = 10;
     [SerializeField] private float startAngle = 90f, endAngle = 270f;
-    public GameObject ProyectileBoss;
-    public GameObject laserPrefab;
+
+    [Header("Refs")]
     public Transform firePoint;
-    [SerializeField] private float laserSpeed = 1;
-    [SerializeField] public float lifeTimeLaser;
+
+    [Header("Laser")]
+    [SerializeField] private float laserSpeed = 1f;
+    [SerializeField] public float lifeTimeLaser = 3f; 
+
+    [Header("ZigZag (placeholder)")]
     public GameObject zigzagPrefab;
-    [SerializeField] public float speedZigZag;
-    [SerializeField] public float lifeTimeZigZag;
+    [SerializeField] public float speedZigZag = 5f;
+    [SerializeField] public float lifeTimeZigZag = 3f;
 
+    [Header("Anim/Audio")]
     private Animator animator;
-
     public float animationDuration = 0.30f;
+    public AudioSource clipAttack;
 
     private bool isCooldownActive = false;
 
-    public AudioSource clipAttack;
+    // Cache
+    private Transform player;
 
     private void Start()
     {
-        StartAttackCycle();
-
         animator = GetComponent<Animator>();
+        FindPlayer();
+        StartAttackCycle();
+    }
+
+    private void FindPlayer()
+    {
+        var go = GameObject.FindWithTag("Player");
+        if (go == null) go = GameObject.Find("Player") ?? GameObject.Find("Player Fast");
+        player = go != null ? go.transform : null;
+    }
+
+    private void OnDisable()
+    {
+        CancelInvoke();
+        StopAllCoroutines();
+        ClearAllProjectiles();
     }
 
     private void StartAttackCycle()
     {
-        InvokeRepeating("FireBossBullet", 1f, 4.5f);
-        InvokeRepeating("ShootLaser", 4f, 6f);
-        //InvokeRepeating("ShootZigzagShot", 8f, 10f);
-        InvokeRepeating("FireCircle", 9f, 10f);
+        InvokeRepeating(nameof(FireBossBullet), 1f, 4.5f);
+        InvokeRepeating(nameof(ShootLaser), 4f, 6f);
+        InvokeRepeating(nameof(FireCircle), 9f, 10f);
 
-
-
-        // Iniciar el cooldown global cada 10 segundos (3 ataques + cooldown de 3s)
         StartCoroutine(CooldownRoutine());
     }
 
@@ -47,18 +63,19 @@ public class FireBoss : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(10f); // Ataques de 10 segundos en total
+            yield return new WaitForSeconds(10f);
 
-            CancelInvoke("FireCircle");
-            CancelInvoke("FireBossBullet");
-            CancelInvoke("ShootLaser");
-            CancelInvoke("ShootZigzagShot");
+            CancelInvoke(nameof(FireCircle));
+            CancelInvoke(nameof(FireBossBullet));
+            CancelInvoke(nameof(ShootLaser));
             isCooldownActive = true;
 
-            yield return new WaitForSeconds(3f); // Cooldown
+            ClearAllProjectiles();
+
+            yield return new WaitForSeconds(3f); // cooldown
 
             isCooldownActive = false;
-            StartAttackCycle(); // Reactivar el ciclo de ataques
+            StartAttackCycle();
         }
     }
 
@@ -66,24 +83,26 @@ public class FireBoss : MonoBehaviour
     {
         if (isCooldownActive) return;
 
-        animator.SetTrigger("DisparoRadial");
+        if (animator) animator.SetTrigger("DisparoRadial");
 
         float angleStep = (endAngle - startAngle) / (float)bulletsAmount;
         float angle = startAngle;
 
         for (int i = 0; i < bulletsAmount + 1; i++)
         {
-            float bulDirX = transform.position.x + Mathf.Sin((angle * Mathf.PI) / 180);
-            float bulDirY = transform.position.y + Mathf.Cos((angle * Mathf.PI) / 180);
+            float bulDirX = transform.position.x + Mathf.Sin((angle * Mathf.PI) / 180f);
+            float bulDirY = transform.position.y + Mathf.Cos((angle * Mathf.PI) / 180f);
 
             Vector3 bulMoveVector = new Vector3(bulDirX, bulDirY, 0f);
             Vector2 bulDir = (bulMoveVector - transform.position).normalized;
 
-            GameObject bul = BulletPoolBoss.bulletPoolInstanse.GetBullet();
-            bul.transform.position = transform.position;
-            bul.transform.rotation = transform.rotation;
-            bul.SetActive(true);
-            bul.GetComponent<BulletBoss>().SetMoveDirection(bulDir);
+            var bul = BulletPoolBoss.bulletPoolInstanse.GetBullet();
+            if (bul != null)
+            {
+                bul.transform.SetPositionAndRotation(transform.position, transform.rotation);
+                bul.SetActive(true);
+                bul.GetComponent<BulletBoss>().SetMoveDirection(bulDir);
+            }
 
             angle += angleStep;
         }
@@ -93,39 +112,59 @@ public class FireBoss : MonoBehaviour
     {
         if (isCooldownActive) return;
 
-        GameObject playerShip = GameObject.Find("Player") ?? GameObject.Find("Player Fast");
+        if (player == null) FindPlayer();
+        if (player == null) return;
 
-        if (playerShip != null)
+        if (clipAttack) clipAttack.Play();
+
+        var bul = BulletPoolBoss.bulletPoolInstanse.GetBullet();
+        if (bul != null)
         {
-            clipAttack.Play();
-            GameObject BossBullet = Instantiate(ProyectileBoss);
-            BossBullet.transform.position = transform.position;
+            bul.transform.position = transform.position;
+            bul.transform.rotation = Quaternion.identity;
+            bul.SetActive(true);
 
-            Vector2 direction = playerShip.transform.position - BossBullet.transform.position;
-            BossBullet.GetComponent<BulletBoss>().SetMoveDirection(direction);
+            Vector2 dir = (player.position - bul.transform.position);
+            bul.GetComponent<BulletBoss>().SetMoveDirection(dir);
         }
     }
-
 
     private void ShootLaser()
     {
         if (isCooldownActive) return;
 
         Vector3 spawnPosition = firePoint != null ? firePoint.position : transform.position;
-        GameObject laserInstance = Instantiate(laserPrefab, spawnPosition, Quaternion.identity);
-        laserInstance.GetComponent<LaserBoss>().SetMoveDirection(Vector3.down * laserSpeed);
-        Destroy(laserInstance, lifeTimeLaser);
+
+        var laser = LaserPoolBoss.Instance != null ? LaserPoolBoss.Instance.GetLaser() : null;
+        if (laser != null)
+        {
+            laser.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
+            laser.SetActive(true);
+
+            var lb = laser.GetComponent<LaserBoss>();
+            if (lb != null)
+            {
+                lb.SetMoveDirection(Vector3.down * laserSpeed);
+                StartCoroutine(AutoDisable(laser, lifeTimeLaser));
+            }
+        }
+
+    }
+
+    private IEnumerator AutoDisable(GameObject go, float t)
+    {
+        yield return new WaitForSeconds(t);
+        if (go != null) go.SetActive(false);
     }
 
 
-
-    private void ShootZigzagShot()
+    public void ClearAllProjectiles()
     {
-        if (isCooldownActive) return;
+        if (BulletPoolBoss.bulletPoolInstanse != null)
+            BulletPoolBoss.bulletPoolInstanse.ClearPool();
 
-        Vector3 spawnPosition = firePoint != null ? firePoint.position : transform.position;
-        GameObject zigzagInstance = Instantiate(zigzagPrefab, spawnPosition, Quaternion.identity);
-        zigzagInstance.GetComponent<ZigZagShot>().SetMoveDirection(Vector3.down * speedZigZag);
-        Destroy(zigzagInstance, lifeTimeZigZag);
+        if (LaserPoolBoss.Instance != null)
+            LaserPoolBoss.Instance.ClearPool();
+
     }
 }

@@ -39,7 +39,7 @@ public class EnemyBulletFly : MonoBehaviour
         {
             if (!GameManager.Instance.IsPlayerInvulnerable())
             {
-                GameManager.Instance.LoseLive(0.1f); // Envía 1 vida o el valor de daño reducido
+                GameManager.Instance.LoseLive(0.1f); 
             }
             Destroy(gameObject);
         }

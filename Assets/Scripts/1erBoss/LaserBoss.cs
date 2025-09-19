@@ -1,42 +1,73 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public class LaserBoss : MonoBehaviour
 {
     private Vector3 moveDirection;
 
-    [SerializeField]
-    public float speed; // Velocidad del láser
+    [Header("Movement & Damage")]
+    [SerializeField] private float speed = 6f;     
+    [SerializeField] private int damage = 1;      
 
-    [SerializeField]
-    public int damage ; // Daño del láser
+    [Header("Lifetime")]
+    [SerializeField] private float lifeTime = 3f;  
+    private Coroutine autoDisableRoutine;
 
-    [SerializeField]
-    public float lifeTime ;
+    private void OnEnable()
+    {
+        if (lifeTime > 0f)
+            autoDisableRoutine = StartCoroutine(AutoDisable(lifeTime));
+    }
 
     private void Update()
     {
-        transform.Translate(moveDirection * Time.deltaTime);
+        transform.Translate(moveDirection * speed * Time.deltaTime, Space.World);
+
+        var cam = Camera.main;
+        if (cam != null)
+        {
+            Vector2 min = cam.ViewportToWorldPoint(new Vector2(0f, 0f));
+            Vector2 max = cam.ViewportToWorldPoint(new Vector2(1f, 1f));
+
+            Vector3 p = transform.position;
+            if (p.x < min.x || p.x > max.x || p.y < min.y || p.y > max.y)
+                gameObject.SetActive(false);
+        }
     }
 
     public void SetMoveDirection(Vector3 dir)
     {
-        moveDirection = dir;
+        moveDirection = dir.sqrMagnitude > 0.0001f ? dir.normalized : Vector3.zero;
     }
 
-    private void Destroy()
-
+    private IEnumerator AutoDisable(float t)
     {
+        yield return new WaitForSeconds(t);
         gameObject.SetActive(false);
     }
+
+    private void OnDisable()
+    {
+        if (autoDisableRoutine != null)
+        {
+            StopCoroutine(autoDisableRoutine);
+            autoDisableRoutine = null;
+        }
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.gameObject.CompareTag("Player"))
+        if (other.CompareTag("Player"))
         {
-            GameManager.Instance.LoseLive();
-            //Aplicar aqui el instance de la animacion del impacto 
+            GameManager.Instance.LoseLive(damage);
+            gameObject.SetActive(false);
+
         }
+    }
+
+    public void Initialize(Vector3 direction, float lifetimeOverride = -1f)
+    {
+        SetMoveDirection(direction);
+        if (lifetimeOverride >= 0f) lifeTime = lifetimeOverride;
     }
 }

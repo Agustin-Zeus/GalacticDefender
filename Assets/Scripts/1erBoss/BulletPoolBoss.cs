@@ -1,56 +1,44 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class BulletPoolBoss : MonoBehaviour
 {
-   public static BulletPoolBoss bulletPoolInstanse;
+    public static BulletPoolBoss bulletPoolInstanse;
 
-    [SerializeField]
-    private GameObject pooledBullet;
-    private bool notEnoughBulletsPool = true;
+    [SerializeField] private GameObject pooledBullet;
+    [SerializeField] private bool notEnoughBulletsPool = true;
 
-    private List<GameObject> bullets;
+    private readonly List<GameObject> bullets = new();
 
     private void Awake()
     {
         bulletPoolInstanse = this;
     }
 
-    private void Start()
+    public GameObject GetBullet()
     {
-        bullets = new List<GameObject>();   
-    }
-
-    public GameObject GetBullet() 
-    
-    {
-        if (bullets.Count > 0)
-        
+        for (int i = 0; i < bullets.Count; i++)
         {
-            for (int i = 0; i < bullets.Count; i++)
-            {
-                if (!bullets[i].activeInHierarchy)
-                {
-                    return bullets[i];
-                }
-            }
+            if (!bullets[i].activeInHierarchy)
+                return bullets[i];
         }
 
-        if (notEnoughBulletsPool)
+        if (notEnoughBulletsPool && pooledBullet != null)
         {
-            GameObject bul = Instantiate(pooledBullet);
+            GameObject bul = Instantiate(pooledBullet, transform);
             bul.SetActive(false);
             bullets.Add(bul);
             return bul;
-
         }
+
         return null;
-
     }
-
- 
-
-
+    public void ClearPool()
+    {
+        for (int i = 0; i < bullets.Count; i++)
+        {
+            if (bullets[i] != null && bullets[i].activeInHierarchy)
+                bullets[i].SetActive(false);
+        }
+    }
 }
