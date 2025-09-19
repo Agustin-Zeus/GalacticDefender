@@ -1,46 +1,87 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PhasatronSpawner : MonoBehaviour
 {
-    public GameObject enemyPrefab;
-    public float spawnInterval = 1;
-    public Transform[] moveSpots;  // Añade los puntos de movimiento aquí
+    [Header("Prefab")]
+    [SerializeField] private GameObject enemyPrefab;
 
-    public int maxEnemies = 1;
+    [Header("Timing")]
+    [SerializeField] private float spawnInterval = 1f;
+
+    [Header("Movimiento del enemigo")]
+    [SerializeField] private Transform[] moveSpots;  
+
+    [Header("Límites de spawn")]
+    [SerializeField] private int maxEnemies = 1;
     private int currentEnemy = 0;
 
-    public int minScoreThreshold;  // Puntaje mínimo para empezar a spawnear
-    public int maxScoreThreshold;  // Puntaje máximo para detener el spawn
+    [Header("Condición por Score")]
+    [SerializeField] private int minScoreThreshold = 0;
+    [SerializeField] private int maxScoreThreshold = int.MaxValue;
 
-    void Start()
+    [Header("Rango de aparición")]
+    [SerializeField] private Vector2 spawnXRange = new(-6f, 3f);
+    [SerializeField] private float spawnY = 3.88f;
+
+    private Coroutine loop;
+    private WaitForSeconds wait;
+
+    private void OnValidate()
     {
-        InvokeRepeating("SpawnEnemy", spawnInterval, spawnInterval);
+        spawnInterval = Mathf.Max(0.01f, spawnInterval);
+        maxEnemies = Mathf.Max(0, maxEnemies);
+
+        if (spawnXRange.x > spawnXRange.y)
+            (spawnXRange.x, spawnXRange.y) = (spawnXRange.y, spawnXRange.x);
+
+        if (maxScoreThreshold < minScoreThreshold)
+            maxScoreThreshold = minScoreThreshold;
     }
 
-    void SpawnEnemy()
+    private void OnEnable()
     {
-        // Solo spawnea si el puntaje está entre el umbral mínimo y máximo, y no se ha alcanzado el máximo de enemigos
-        if (GameManager.Instance.TotalScore >= minScoreThreshold && GameManager.Instance.TotalScore < maxScoreThreshold && currentEnemy < maxEnemies)
+        wait = new WaitForSeconds(spawnInterval);
+        loop = StartCoroutine(SpawnLoop());
+    }
+
+    private void OnDisable()
+    {
+        if (loop != null) StopCoroutine(loop);
+        loop = null;
+    }
+
+    private IEnumerator SpawnLoop()
+    {
+        while (enabled)
         {
-            float spawnPosX = Random.Range(-6, 3);  // Variación en X
-            float spawnPosY = 3.88f;  // Posición fija en Y
-
-            Vector2 spawnPosition = new Vector2(spawnPosX, spawnPosY);
-
-            GameObject newEnemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
-
-            // Asignar los moveSpots al enemigo instanciado
-            Phasatron enemyScript = newEnemy.GetComponent<Phasatron>();
-            enemyScript.moveSpots = moveSpots;
-
-            currentEnemy++;
+            TrySpawn();
+            yield return wait;
         }
+    }
+
+    private void TrySpawn()
+    {
+        int score = GameManager.Instance != null ? GameManager.Instance.TotalScore : 0;
+        if (score < minScoreThreshold || score >= maxScoreThreshold) return;
+        if (currentEnemy >= maxEnemies) return;
+        if (enemyPrefab == null) return;
+
+        float spawnPosX = Random.Range(spawnXRange.x, spawnXRange.y);
+        Vector2 spawnPosition = new(spawnPosX, spawnY);
+
+        GameObject newEnemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
+
+        if (newEnemy.TryGetComponent<Phasatron>(out var enemyScript))
+        {
+            enemyScript.moveSpots = moveSpots;
+        }
+
+        currentEnemy++;
     }
 
     public void EnemyDestroyed()
     {
-        currentEnemy--;
+        currentEnemy = Mathf.Max(0, currentEnemy - 1);
     }
 }
