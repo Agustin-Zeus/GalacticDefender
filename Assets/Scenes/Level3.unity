@@ -6512,6 +6512,10 @@ PrefabInstance:
       propertyPath: reinforcementPoints.Array.data[5]
       value: 
       objectReference: {fileID: 2040487137}
+    - target: {fileID: 4635074862210428967, guid: 0ef83b90375d44c4fa3433c0837070c8, type: 3}
+      propertyPath: poolSize
+      value: 50
+      objectReference: {fileID: 0}
     - target: {fileID: 6299318943780586479, guid: 0ef83b90375d44c4fa3433c0837070c8, type: 3}
       propertyPath: m_Time
       value: 0.2
