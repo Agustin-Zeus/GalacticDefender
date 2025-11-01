@@ -4,7 +4,7 @@ using UnityEngine;
 public class PoolBulletPlayer : MonoBehaviour
 {
     [SerializeField] private GameObject bulletPrefab;
-    [SerializeField] private int poolSize = 10;
+    [SerializeField] private int poolSize = 40;
     [SerializeField] private Transform poolParent;
 
     private readonly Queue<GameObject> availableBullets = new Queue<GameObject>();
@@ -48,10 +48,15 @@ public class PoolBulletPlayer : MonoBehaviour
         bullet.transform.SetParent(null, false);
         bullet.SetActive(true);
 
+        /*
         if (lifespan > 0f)
         {
             StartCoroutine(DeactivateAfterTime(bullet, lifespan));
         }
+        */
+        StopCoroutine(DeactivateAfterTime(bullet, lifespan));
+        StartCoroutine(DeactivateAfterTime(bullet, lifespan));
+
         return bullet;
     }
 
