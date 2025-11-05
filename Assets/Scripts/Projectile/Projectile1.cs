@@ -61,6 +61,13 @@ public class Projectile1 : MonoBehaviour
         StartCoroutine(DeactivateAfterTime(lifespan));
     }
 
+    void Awake()
+    {
+        var rb = GetComponent<Rigidbody2D>();
+        if (rb != null) rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+    }
+
+
     void Update()
     {
         transform.Translate(Vector2.up * moveSpeed * Time.deltaTime);
