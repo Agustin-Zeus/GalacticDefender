@@ -12,6 +12,9 @@ public class MeteoritoSpawner : MonoBehaviour
     [SerializeField] private GameObject warningSprite;
     [SerializeField] private float warningDuration = 3f;
 
+    private float timer;
+
+
     private void Awake()
     {
         if (warningSprite != null)
@@ -22,6 +25,8 @@ public class MeteoritoSpawner : MonoBehaviour
 
     private void OnEnable()
     {
+        timer = spawnInterval;
+
         InvokeRepeating(nameof(StartWarningSequence), spawnInterval, spawnInterval);
     }
 

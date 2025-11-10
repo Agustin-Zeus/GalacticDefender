@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Threading;
 using UnityEngine;
 
 public class EnemyFlyThroughSpawner : MonoBehaviour
@@ -8,6 +9,7 @@ public class EnemyFlyThroughSpawner : MonoBehaviour
 
     [Header("Timing")]
     [SerializeField] private float spawnInterval = 1f;
+    [SerializeField] private float firstSpawnDelay = 3f; 
 
     [Header("Condición por Score")]
     [SerializeField] private int minScoreThreshold = 0;
@@ -29,6 +31,9 @@ public class EnemyFlyThroughSpawner : MonoBehaviour
     private Coroutine loop;
     private WaitForSeconds wait;
 
+    private float timer;
+    private bool firstSpawn = true;
+
     private void OnValidate()
     {
         spawnInterval = Mathf.Max(0.01f, spawnInterval);
@@ -45,6 +50,9 @@ public class EnemyFlyThroughSpawner : MonoBehaviour
 
     private void OnEnable()
     {
+
+        timer = firstSpawn ? firstSpawnDelay : spawnInterval;
+
         wait = new WaitForSeconds(spawnInterval);
         loop = StartCoroutine(SpawnLoop());
     }
@@ -53,6 +61,25 @@ public class EnemyFlyThroughSpawner : MonoBehaviour
     {
         if (loop != null) StopCoroutine(loop);
         loop = null;
+    }
+
+    private void Update()
+    {
+        // BLOQUEO ABSOLUTO
+        if (!GameManager.CanSpawnEnemies)
+            return;
+
+        if (enemyFlyThroughPrefab == null)
+            return;
+
+        timer -= Time.deltaTime;
+
+        if (timer <= 0f)
+        {
+            TrySpawn();
+            firstSpawn = false;
+            timer = spawnInterval;
+        }
     }
 
     private IEnumerator SpawnLoop()

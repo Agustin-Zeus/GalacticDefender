@@ -1,10 +1,11 @@
-using UnityEngine.SceneManagement;
+Ôªøusing UnityEngine.SceneManagement;
 using UnityEngine;
 using Unity.Collections;
 using System.Collections;
 using UnityEngine.Video;
 using UnityEngine.Audio;
 using TMPro;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -39,7 +40,7 @@ public class GameManager : MonoBehaviour
 
     public GameObject player; 
 
-    [SerializeField] private VideoPlayer eventVideoPlayer; // VideoPlayer que reproducir· el video del evento
+    [SerializeField] private VideoPlayer eventVideoPlayer; // VideoPlayer que reproducir√° el video del evento
 
     public TMPro.TextMeshPro ScoreText;
     public TMPro.TextMeshPro HighScore;
@@ -54,19 +55,44 @@ public class GameManager : MonoBehaviour
     public AudioClip deathSound;
     private AudioSource audioSource;
 
-    private bool bossMusicPlayed = false; // Controla si la m˙sica ya cambiÛ
+    private bool bossMusicPlayed = false; // Controla si la m√∫sica ya cambi√≥
 
-    public int LastLevelIndex { get; set; }  
+    public int LastLevelIndex { get; set; }
+    public static bool CanSpawnEnemies { get; private set; }
+
+
+    [Header("Sistemas de juego")]
+    [SerializeField] private GameObject[] enemySpawners; 
+    [SerializeField] private GameObject alliesSystem;
+    [SerializeField] private bool tutorialCompleted;
+    [SerializeField] private Slider alliesBarSlider; 
+    [SerializeField] private ProjectileShoot projectileShoot;
+
+
+    public bool TutorialCompleted { get; private set; }
+
 
     private void Awake()
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(gameObject);            // mata duplicados
+            Destroy(gameObject);            
             return;
         }
         Instance = this;
-        LoadHighScores(); 
+        LoadHighScores();
+
+        CanSpawnEnemies = false;
+
+        SetSpawnersActive(false);
+
+        if (alliesBarSlider != null)
+            alliesBarSlider.value = alliesBarSlider.maxValue;
+
+        if (projectileShoot != null)
+        {
+            projectileShoot.ForceFullCharge();
+        }
     }
 
     public void Start()
@@ -89,6 +115,27 @@ public class GameManager : MonoBehaviour
             ActivateCheat();
         }
     }
+
+    public void OnTutorialCompleted()
+    {
+        tutorialCompleted = true;
+
+        CanSpawnEnemies = true;
+
+        SetSpawnersActive(true);
+        if (alliesSystem != null)
+            alliesSystem.SetActive(true);
+    }
+
+    private void SetSpawnersActive(bool state)
+    {
+        foreach (GameObject spawner in enemySpawners)
+        {
+            if (spawner != null)
+                spawner.SetActive(state);
+        }
+    }
+
 
     public void SetPlayerInvulnerable(bool state)
     {
@@ -297,7 +344,7 @@ public class GameManager : MonoBehaviour
 
     private void RandomizeMeteoritoSpawners()
     {
-        if (bossInvoked) return; // Si el jefe est· invocado, no se randomizan los spawners
+        if (bossInvoked) return; // Si el jefe est√° invocado, no se randomizan los spawners
 
         foreach (var spawner in meteoritoSpawners)
         {

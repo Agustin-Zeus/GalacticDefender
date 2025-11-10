@@ -22,6 +22,8 @@ public class MeteoritoSpawnerL : MonoBehaviour
 
     private void OnEnable()
     {
+        if (GameManager.Instance == null || !GameManager.Instance.TutorialCompleted) return;
+
         // Usamos nameof para evitar errores de cadena y activar el spawn repetido
         InvokeRepeating(nameof(StartWarningSequence), spawnInterval, spawnInterval);
     }

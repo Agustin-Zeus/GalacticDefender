@@ -180,6 +180,18 @@ public class ProjectileShoot : MonoBehaviour
     
         InvokeReinforcements();
     }
+
+    public void ForceFullCharge()
+    {
+        currentCharge = maxCharge;
+
+        if (chargedShotSlider != null)
+        {
+            chargedShotSlider.maxValue = maxCharge;
+            chargedShotSlider.value = currentCharge;
+        }
+    }
+
     void InvokeReinforcements()
     {
         List<GameObject> spawnedReinforcements = new List<GameObject>(); // Lista para almacenar las naves creadas
