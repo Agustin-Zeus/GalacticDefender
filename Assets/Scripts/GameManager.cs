@@ -100,8 +100,13 @@ public class GameManager : MonoBehaviour
         boss.SetActive(false);
         InvokeRepeating(nameof(RandomizeMeteoritoSpawners), meteoritoRandomizeInterval, meteoritoRandomizeInterval);
 
+        if (PlayerPrefs.GetInt("TutorialCompleted", 0) == 1)
+        {
+            TutorialCompleted = true;
+            OnTutorialCompleted(); // activa spawners, aliados, etc.
+        }
 
-        audioSource = GetComponent<AudioSource>();
+            audioSource = GetComponent<AudioSource>();
     }
 
     private void Update()

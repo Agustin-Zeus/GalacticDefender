@@ -3437,6 +3437,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PowerUpShoot
       objectReference: {fileID: 0}
+    - target: {fileID: 2179046270816431085, guid: 7b81db826f1a25040a38da5f69bf6d14, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4271329825628811655, guid: 7b81db826f1a25040a38da5f69bf6d14, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.09

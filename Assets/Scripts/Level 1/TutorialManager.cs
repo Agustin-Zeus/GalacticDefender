@@ -40,14 +40,22 @@ public class TutorialManager : MonoBehaviour
     private bool triplePicked;
     private bool tripleUsed;
 
-    // Control interno
     private bool isTyping;
-    private bool isTransitioning; // bloquea inputs mientras corre el delay
+    private bool isTransitioning; 
     private string currentFullText;
     private Coroutine typeRoutine;
 
     private void Start()
     {
+        if (PlayerPrefs.GetInt("TutorialCompleted", 0) == 1)
+        {
+            if (tutorialPanel != null)
+                tutorialPanel.SetActive(false);
+
+            enabled = false;
+            return;
+        }
+
         stepIndex = 0;
 
         if (tripleShotPowerUp != null)
@@ -58,7 +66,6 @@ public class TutorialManager : MonoBehaviour
 
     private void Update()
     {
-        // Si está escribiendo o esperando el delay, no procesa inputs
         if (isTyping || isTransitioning)
             return;
 
@@ -79,7 +86,7 @@ public class TutorialManager : MonoBehaviour
             case 4:
                 CheckTripleShot();
                 break;
-                // case 5: solo muestra texto final y se termina en TypeText()
+
         }
     }
 
@@ -243,6 +250,9 @@ public class TutorialManager : MonoBehaviour
 
         if (GameManager.Instance != null)
             GameManager.Instance.OnTutorialCompleted();
+
+        PlayerPrefs.SetInt("TutorialCompleted", 1);
+        PlayerPrefs.Save();
 
         enabled = false;
     }

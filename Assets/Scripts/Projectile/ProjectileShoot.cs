@@ -181,6 +181,8 @@ public class ProjectileShoot : MonoBehaviour
         InvokeReinforcements();
     }
 
+
+
     public void ForceFullCharge()
     {
         currentCharge = maxCharge;
@@ -191,6 +193,19 @@ public class ProjectileShoot : MonoBehaviour
             chargedShotSlider.value = currentCharge;
         }
     }
+
+    public void ResetCharge()
+    {
+        currentCharge = 0f;
+
+        if (chargedShotSlider != null)
+        {
+            chargedShotSlider.maxValue = maxCharge;
+            chargedShotSlider.value = currentCharge;
+        }
+    }
+
+
 
     void InvokeReinforcements()
     {
