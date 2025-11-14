@@ -97,6 +97,8 @@ public class GameManager : MonoBehaviour
 
     public void Start()
     {
+        Application.targetFrameRate = 60; 
+
         boss.SetActive(false);
         InvokeRepeating(nameof(RandomizeMeteoritoSpawners), meteoritoRandomizeInterval, meteoritoRandomizeInterval);
 
